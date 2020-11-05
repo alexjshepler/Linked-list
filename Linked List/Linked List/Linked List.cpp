@@ -283,7 +283,9 @@ public:
 	Node* next;
 
 	Node() {
-
+		data = nullptr;
+		prev = nullptr;
+		next = nullptr;
 	}
 
 	Node(ASString str) {
@@ -298,7 +300,9 @@ public:
 	mutable Node* it;
 
 	DoubleLinkedList() {
-
+		head = nullptr;
+		tail = nullptr;
+		it = head;
 	}
 
 	DoubleLinkedList(const DoubleLinkedList& dll) {
@@ -309,40 +313,69 @@ public:
 		else {
 			head = new Node;
 			head = dll.head;
-
+			dll.it = dll.head;
+			it = head;
+			for (auto it = dll.head; it->next != nullptr; it = it->next)
+				insert(it->data);
 		}
 	}
 
 	~DoubleLinkedList() {
-
+		auto it = this->head;
+		while (it != nullptr)
+		{
+			auto toDelete = it;
+			it = it->next;
+			delete toDelete;
+		}
 	}
-
 	void operator=(const DoubleLinkedList& dll) {
-
+		if (dll.head == nullptr) {
+			head = nullptr;
+			tail = nullptr;
+		}
+		else {
+			head = new Node;
+			head = dll.head;
+			dll.it = dll.head;
+			it = head;
+			for (auto it = dll.head; it->next != nullptr; it = it->next)
+				insert(it->data);
+		}
 	}
 
 	friend ostream& operator<<(ostream& os, const DoubleLinkedList dll) {
+		ASString str;
+		Node* n = dll.head;
 
+		while (n != nullptr) {
+			str = str + n->data;
+			n = n->next;
+		}
+
+		return os.write(str.MyStr, str.length());
 	}
 
 	bool insert(ASString& str) {
+		resetIteration();
+
 		Node* temp = new Node;
 		temp->data = str;
 
+		bool hasInserted = false;
 		do {
-			if (str == it->data) {
+			if (str < it->data && it->prev != nullptr && str > it->prev->data) {
+				temp->next = it;
+				temp->prev = it->prev;
+				it->prev->next = temp;
+				it->next->prev = temp;
+				hasInserted = true;
+			}
+			else if (it == nullptr || str == it->data)
 				return false;
-			}
-			else {
+			else
 				it = it->next;
-			}
-		} while (hasMore());
-
-		do {
-			if(str < it->data && it->prev != nullptr && str > it->data){
-
-			}
-		} while (true);
+		} while (hasInserted == false);
 
 		if (head == NULL) {
 			head = temp;
@@ -354,19 +387,36 @@ public:
 			tail = tail->next;
 		}
 
+		delete temp;
 		return true;
 	}
 
 	bool remove(const ASString& str) {
+		resetIteration();
+		do {
+			if (it->data == str) {
+				it->next->prev = it->prev;
+				it->prev->next = it->next;
+				it = nullptr;
+				return true;
+			}
+			else {
+				it = it->next;
+			}
+		} while (hasMore());
+
+		return false;
 	}
 
 	int getCount() {
 		int i;
 		Node* temp = new Node;
 		temp = head;
-		while (temp != NULL) {
+		while (temp != nullptr) {
 			i++;
+			temp = temp->next;
 		}
+		return i;
 	}
 
 	void resetIteration() {
@@ -375,7 +425,7 @@ public:
 
 	ASString next() {
 		ASString temp = it->data;
-		if (hasMore) {
+		if (hasMore()) {
 			it = it->next;
 		}
 		return temp;
@@ -387,58 +437,104 @@ public:
 		else
 			return false;
 	}
+
 };
 
 int ASString::currentCount = 0;
 int ASString::createdCount = 0;
 
+void changer(DoubleLinkedList list);
+
 int main()
 {
-	/*
-	ifstream file;
-	file.open("C:/Users/ALEXJ/Downloads/infile3.txt");
+	// ----- Creating the variables
+	DoubleLinkedList List1;
+	DoubleLinkedList List2;
+	DoubleLinkedList modList1;
+	DoubleLinkedList modList2;
 
-	if (!file)
-		cout << "Couldn't open file" << endl;
+	// ----- Reading and writing the variables from a file
+	ifstream inFile1;
+	ifstream inFile2;
+	
+	inFile1.open("C:/Users/ALEXJ/Downloads/infile1.txt");
+	if (!inFile1)
+		cout << "Couldn't open infile1.txt" << endl;
 
-	vector<ASString> longStr;
+	inFile2.open("C:/Users/ALEXJ/Downloads/infile2.txt");
+	if (!inFile2)
+		cout << "Couldn't open infile2.txt" << endl;
 
 	char temp[100] = { '\0' };
 	ASString tempStr;
-	ASString pushStr;
-	tempStr = pushStr;
-	int i = 0;
-	while (file >> temp) {
-		tempStr = tempStr + temp;
-		i++;
-		if (i > 4 || temp == nullptr) {
-			longStr.push_back(tempStr);
-			tempStr = *new ASString;
-			i = 0;
-		}
+	while (inFile1 >> temp) {
+		tempStr = temp;
+		List1.insert(tempStr);
 	}
-	longStr.push_back(tempStr);
 
-	bool sorted = true;
+	while (inFile2 >> temp) {
+		tempStr = temp;
+		List2.insert(tempStr);
+	}
+
+	// ----- Output the sizes of the lists
+	cout << "Size of List1 " << List1.getCount() << endl;
+	cout << "Size of List2 " << List2.getCount() << endl;
+	cout << "Size of modList1 " << modList1.getCount() << endl;
+	cout << "Size of modList2 " << modList2.getCount() << endl;
+
+	// ----- Assign List to modList
+	modList1 = List1;
+	modList2 = List2;
+
+	// ----- Output the sizes of the lists
+	cout << "Size of List1 " << List1.getCount() << endl;
+	cout << "Size of List2 " << List2.getCount() << endl;
+	cout << "Size of modList1 " << modList1.getCount() << endl;
+	cout << "Size of modList2 " << modList2.getCount() << endl;
+
+	// ----- Removeing strings
 	do {
-		int k = 0;
-		sorted = true;
-		while (k < longStr.size()-1) {
-			if (longStr[k] > longStr[k + 1]) {
-				sorted = false;
-				ASString temp = longStr[k];
-				longStr[k] = longStr[k + 1];
-				longStr[k + 1] = temp;
-			}
-			k++;
-		}
-	} while (sorted == false);
+		modList1.remove(List2.it->data);
+		List2.it = List2.it->next;
+	} while (List2.hasMore());
 
-	int j = 0;
-	while (j < longStr.size()) {
-		cout << longStr[j] << setw(13) << longStr[j].length() << ":" << longStr[j].cap << endl;
-		j++;
-	}
-	cout << longStr[j - 1].getCreatedCount();
-	*/
+	do {
+		modList2.remove(List1.it->data);
+		List1.it = List1.it->next;
+	} while (List1.hasMore());
+
+	// ----- Output the sizes of the lists
+	cout << "Size of List1 " << List1.getCount() << endl;
+	cout << "Size of List2 " << List2.getCount() << endl;
+	cout << "Size of modList1 " << modList1.getCount() << endl;
+	cout << "Size of modList2 " << modList2.getCount() << endl;
+
+	// ----- Use the changer function
+	changer(modList1);
+	changer(modList2);
+
+	// ----- Output the sizes of the lists
+	cout << "Size of List1 " << List1.getCount() << endl;
+	cout << "Size of List2 " << List2.getCount() << endl;
+	cout << "Size of modList1 " << modList1.getCount() << endl;
+	cout << "Size of modList2 " << modList2.getCount() << endl;
+
+	// ----- Ouput the created and current count
+	cout << "Current ASString " << tempStr.currentCount << endl;
+	cout << "Created ASString " << tempStr.createdCount << endl;
+
+	// ----- Output the modLists to files
+
 }
+
+	void changer(DoubleLinkedList list) {
+		ASString str = "ZIP";
+		cout << list.getCount();
+		list.insert(str);
+		cout << list.getCount();
+		str = "ZAP";
+		list.insert(str);
+		cout << list.getCount();
+
+	}
