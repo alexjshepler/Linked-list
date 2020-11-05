@@ -53,13 +53,14 @@ public:
 			i++;
 		}
 		MyStr[i] = '\0';
+		end = i;
 		currentCount++;
 		createdCount++;
 	}
 
 	~ASString() {
 		currentCount--;
-		if (MyStr)
+		if (MyStr != nullptr)
 			delete[]MyStr;
 	}
 
@@ -152,7 +153,7 @@ public:
 	//	ostrm.write(MyStr, length());
 	//}
 
-	bool operator<(const ASString& argStr) {
+	bool operator<(const ASString argStr) {
 		int i = 0;
 		int l = len(MyStr);
 		int r = 0;
@@ -208,18 +209,16 @@ public:
 			r = len(argStr);
 		else
 			return false;
+		bool isEqual = false;
 
-		int j = 0;
-		if (l > r)
-			j = l;
-		else
-			j = r;
-
-		for (int q = 0; j > q; q++) {
-			if (MyStr[q] == argStr[q] || argStr[q] == '\n')
-				return true;
+		if (l == r) {
+			isEqual = true;
+			for (int q = 0; l > q; q++) {
+				if (MyStr[q] != argStr[q])
+					isEqual = false;
+			}
 		}
-		return false;
+		return isEqual;
 	}
 
 	friend ASString operator+(const ASString& L, const ASString& R) {
@@ -283,9 +282,9 @@ public:
 	Node* next;
 
 	Node() {
-		data = nullptr;
+		/*data = nullptr;
 		prev = nullptr;
-		next = nullptr;
+		next = nullptr;*/
 	}
 
 	Node(ASString str) {
@@ -357,37 +356,47 @@ public:
 	}
 
 	bool insert(ASString& str) {
-		resetIteration();
 
 		Node* temp = new Node;
 		temp->data = str;
-
-		bool hasInserted = false;
-		do {
-			if (str < it->data && it->prev != nullptr && str > it->prev->data) {
-				temp->next = it;
-				temp->prev = it->prev;
-				it->prev->next = temp;
-				it->next->prev = temp;
-				hasInserted = true;
-			}
-			else if (it == nullptr || str == it->data)
-				return false;
-			else
-				it = it->next;
-		} while (hasInserted == false);
 
 		if (head == NULL) {
 			head = temp;
 			tail = temp;
 		}
 		else {
-			tail->next = temp;
-			temp->prev = tail;
-			tail = tail->next;
+
+			resetIteration();
+			bool hasInserted = false;
+			do {
+				if (str < it->data) {
+					if (it->prev == nullptr) {
+						temp->next = it;
+						it->prev = temp;
+						hasInserted = true;
+						head = temp;
+					}
+					else {
+						temp->next = it;
+						temp->prev = it->prev;
+						temp->prev->next = temp;
+						it->prev = temp;
+						hasInserted = true;
+					}
+				}
+				else if (str == it->data)
+					return false;
+				else if (it->next == nullptr) {
+					tail->next = temp;
+					temp->prev = tail;
+					tail = tail->next;
+				}
+				else
+					it = it->next;
+			} while (hasInserted == false);
+
 		}
 
-		delete temp;
 		return true;
 	}
 
@@ -409,7 +418,7 @@ public:
 	}
 
 	int getCount() {
-		int i;
+		int i = 0;
 		Node* temp = new Node;
 		temp = head;
 		while (temp != nullptr) {
@@ -443,8 +452,6 @@ public:
 int ASString::currentCount = 0;
 int ASString::createdCount = 0;
 
-void changer(DoubleLinkedList list);
-
 int main()
 {
 	// ----- Creating the variables
@@ -456,7 +463,7 @@ int main()
 	// ----- Reading and writing the variables from a file
 	ifstream inFile1;
 	ifstream inFile2;
-	
+
 	inFile1.open("C:/Users/ALEXJ/Downloads/infile1.txt");
 	if (!inFile1)
 		cout << "Couldn't open infile1.txt" << endl;
@@ -466,15 +473,16 @@ int main()
 		cout << "Couldn't open infile2.txt" << endl;
 
 	char temp[100] = { '\0' };
-	ASString tempStr;
+	ASString tempStr1;
 	while (inFile1 >> temp) {
-		tempStr = temp;
-		List1.insert(tempStr);
+		tempStr1 = temp;
+		List1.insert(tempStr1);
 	}
 
+	ASString tempStr2;
 	while (inFile2 >> temp) {
-		tempStr = temp;
-		List2.insert(tempStr);
+		tempStr2 = temp;
+		List2.insert(tempStr2);
 	}
 
 	// ----- Output the sizes of the lists
@@ -510,31 +518,26 @@ int main()
 	cout << "Size of modList1 " << modList1.getCount() << endl;
 	cout << "Size of modList2 " << modList2.getCount() << endl;
 
-	// ----- Use the changer function
-	changer(modList1);
-	changer(modList2);
-
-	// ----- Output the sizes of the lists
-	cout << "Size of List1 " << List1.getCount() << endl;
-	cout << "Size of List2 " << List2.getCount() << endl;
-	cout << "Size of modList1 " << modList1.getCount() << endl;
-	cout << "Size of modList2 " << modList2.getCount() << endl;
-
 	// ----- Ouput the created and current count
-	cout << "Current ASString " << tempStr.currentCount << endl;
-	cout << "Created ASString " << tempStr.createdCount << endl;
+	cout << "Current ASString " << tempStr1.currentCount << endl;
+	cout << "Created ASString " << tempStr1.createdCount << endl;
 
 	// ----- Output the modLists to files
+	ofstream output1;
+	output1.open("outfile1.txt");
 
-}
-
-	void changer(DoubleLinkedList list) {
-		ASString str = "ZIP";
-		cout << list.getCount();
-		list.insert(str);
-		cout << list.getCount();
-		str = "ZAP";
-		list.insert(str);
-		cout << list.getCount();
-
+	ASString str1;
+	for (int i = 0, j = modList1.getCount(); i < j; i++) {
+		str1 = modList1.next();
+		output1 << str1 << " ";
 	}
+
+	ofstream output2;
+	output1.open("outfile2.txt");
+
+	ASString str2;
+	for (int i = 0, j = modList2.getCount(); i < j; i++) {
+		str2 = modList2.next();
+		output2 << str1 << " ";
+	}
+}
