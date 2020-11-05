@@ -1,9 +1,9 @@
 ////
 // Name: Alex Shepler
 // Section: S
-// Program Name: P2 MYString v1
+// Program Name: P4 Linked List
 //
-// Description: This program I am making my own string class
+// Description: This program combines my previous string class that I made and linked lists
 ////
 
 #include "Header.h"
@@ -60,7 +60,7 @@ public:
 
 	~ASString() {
 		currentCount--;
-		if (MyStr != nullptr)
+		if (MyStr[0] != '\0')
 			delete[]MyStr;
 	}
 
@@ -437,11 +437,12 @@ public:
 		if (hasMore()) {
 			it = it->next;
 		}
+
 		return temp;
 	}
 
 	bool hasMore() {
-		if (it->next != NULL)
+		if (it->next != nullptr)
 			return true;
 		else
 			return false;
@@ -527,17 +528,22 @@ int main()
 	output1.open("outfile1.txt");
 
 	ASString str1;
+	modList1.resetIteration();
 	for (int i = 0, j = modList1.getCount(); i < j; i++) {
 		str1 = modList1.next();
 		output1 << str1 << " ";
 	}
+	output1.close();
+
 
 	ofstream output2;
-	output1.open("outfile2.txt");
+	output2.open("outfile2.txt");
 
 	ASString str2;
+	modList2.resetIteration();
 	for (int i = 0, j = modList2.getCount(); i < j; i++) {
 		str2 = modList2.next();
-		output2 << str1 << " ";
+		output2 << str2 << " ";
 	}
+	output2.close();
 }
